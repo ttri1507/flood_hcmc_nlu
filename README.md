@@ -92,7 +92,7 @@ python3 main.py --input_file preprocessed_flood_data3.csv --n_trials 50 --output
 from flood_prediction.model import FloodPredictionModel
 import pandas as pd
 
-# Đọc dữ liệu
+# read data
 data = pd.read_csv('preprocessed_flood_data3.csv')
 data['Ngày'] = pd.to_datetime(data['Ngày'], format='%d/%m/%Y')
 
@@ -102,13 +102,13 @@ test_dates, y_test, y_pred_test, processed_df, historical_avg, metrics = model.t
     data, pd.to_datetime('2021-06-30'), pd.to_datetime('2022-12-31')
 )
 
-# Dự đoán tương lai
+# predict
 future_dates, predictions_2023 = model.predict_future(processed_df, historical_avg, '2023-12-31')
 
-# Lưu mô hình
+# fave model
 model.save_model('model_phu_an.pkl')
 
-# Tải mô hình đã lưu
+# lpad model
 model.load_model('model_phu_an.pkl')
 ```
 
