@@ -208,7 +208,8 @@ class FloodPredictionModel:
             predictions_2023.append(pred)
             historical_values.append(pred)
 
-        predictions_2023 = pd.Series(predictions_2023).rolling(window=3, center=True).mean().fillna(method='bfill').fillna(method='ffill').values
+        #predictions_2023 = pd.Series(predictions_2023).rolling(window=3, center=True).mean().fillna(method='bfill').fillna(method='ffill').values
+        predictions_2023 = pd.Series(predictions_2023).rolling(window=3, center=True).mean().bfill().ffill().values
         return future_dates, predictions_2023
 
     def save_model(self, path):
