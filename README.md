@@ -26,7 +26,7 @@ flood_hcmc_nlu/
 ├── main.py            # Script chính để chạy module
 ├── requirements.txt   # Danh sách thư viện cần cài
 ├── README.md          # Tài liệu hướng dẫn
-└── preprocessed_flood_data3.csv  # File dữ liệu mẫu (không bao gồm trong repo)
+└── preprocessed_flood_data3.csv  # File dữ liệu 
 ```
 
 ## Yêu cầu hệ thống
