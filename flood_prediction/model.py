@@ -70,7 +70,7 @@ class FloodPredictionModel:
         self.processor = DataProcessor(target_col, [target_col])
         self.safe_target_col = target_col.replace(" (m)", "")
 
-    def objective(self, trial, X, y, train_end_date):
+    def objective(self, trial, X, y, train_end_date, data):
         """Hàm mục tiêu cho Optuna."""
         param = {
             'learning_rate': trial.suggest_float('learning_rate', 0.001, 0.1, log=True),
@@ -87,11 +87,18 @@ class FloodPredictionModel:
 
         mse_scores = []
         tscv = TimeSeriesSplit(n_splits=5)
-        train_data = X[X.index.isin(data[data['Ngày'] <= train_end_date].index)]
-        y_train = y[train_data.index]
+        train_data = data[data['Ngày'] <= train_end_date]
+        X_train, y_train, _, _ = self.processor.prepare_data(train_data)
 
-        for train_idx, val_idx in tscv.split(train_data):
-            X_tr, X_val = train_data.iloc[train_idx], train_data.iloc[val_idx]
+        if len(X_train) < 5 * tscv.get_n_splits():
+            print(f"Cảnh báo: Không đủ mẫu cho {tscv.get_n_splits()} splits, chỉ có {len(X_train)} mẫu")
+            return float('inf')
+
+        for train_idx, val_idx in tscv.split(X_train):
+            if len(train_idx) == 0 or len(val_idx) == 0:
+                print("Tập train hoặc validation rỗng, bỏ qua split này")
+                continue
+            X_tr, X_val = X_train.iloc[train_idx], X_train.iloc[val_idx]
             y_tr, y_val = y_train.iloc[train_idx], y_train.iloc[val_idx]
             dtrain = xgb.DMatrix(X_tr, label=y_tr)
             dval = xgb.DMatrix(X_val, label=y_val)
@@ -105,7 +112,6 @@ class FloodPredictionModel:
 
     def train(self, data, train_end_date, test_end_date):
         """Huấn luyện mô hình."""
-        global data  # Để truy cập data trong objective
         X, y, processed_df, historical_avg = self.processor.prepare_data(data)
         
         # Tách dữ liệu train/test
@@ -120,7 +126,8 @@ class FloodPredictionModel:
         # Tối ưu hóa tham số
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction='minimize')
-        study.optimize(lambda trial: self.objective(trial, X, y, train_end_date), n_trials=self.n_trials)
+        objective_func = lambda trial: self.objective(trial, X, y, train_end_date, data)
+        study.optimize(objective_func, n_trials=self.n_trials)
 
         self.best_params = study.best_params
         num_boost_round = self.best_params.pop('num_boost_round')
