@@ -2,6 +2,7 @@
 import argparse
 import pandas as pd
 import os
+import numpy as np
 from flood_prediction import FloodPredictionModel, save_results, plot_predictions
 
 def parse_arguments():
